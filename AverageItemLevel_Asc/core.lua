@@ -3,6 +3,11 @@ local CACHE = {}
 local TIMEOUT = 180
 local MAX_INSPECTIONS_TILL_TIMEOUT = 5
 local _print = print
+local IsHeroClass = IsHeroClass
+local C_Realm = C_Realm
+local C_CharacterAdvancement = C_CharacterAdvancement
+local C_MysticEnchant = C_MysticEnchant
+
 AiL.Options = AiL.Options or {}
 AiL.Options.ShowIcon = true -- CHANGE THIS TO false TO DISABLE ICON
 AiL.Options.Debug = false
@@ -180,17 +185,8 @@ function AiL.updateCacheSpec(unit)
     local newSpec, newIcon = UnitSpecAndIcon(unit)
     newIcon = " |T" .. newIcon .. ".blp:32:32:0:0|t "
     local data = AiL.getCacheForUnit(unit)
-    -- Is Hero --
-    if IsHeroClass(unit) then
-        -- if seasonal, spec == class so timeout instantly. if not, timeout when spec ~= class
-        data.spec = newSpec or data.spec or class or "?"
-        data.icon = newIcon
-        if C_Realm.IsSeasonal() or data.spec ~= class then
-            data.specExpirationTime = timeNow + TIMEOUT
-        end
-
     -- Is CoA --
-    elseif IsCustomClass(unit) then
+    if IsCustomClass(unit) then
         data.spec = newSpec
 		
         if newSpec ~= UnitClass(unit) then -- UnitSpecAndIcon returned Specialization so we need to append the class
@@ -232,7 +228,25 @@ function AiL.updateCacheSpec(unit)
         end
 
 		AiL.print(UnitName(unit), "no spec info found for ActiveSpec=",activeSpec)
+    
+    -- Is Hero --
+    elseif IsHeroClass(unit) or C_Realm.IsLive() then
+            local legendaryEnchantID = MysticEnchantUtil.GetLegendaryEnchantID(unit)
+            if legendaryEnchantID then
+                local name, _, icon = GetSpellInfo(legendaryEnchantID)
+                if icon then
+                    newSpec = name
+                    newIcon = " |T" .. icon .. ".blp:32:32:0:0|t "
+                end
+            end
+            -- if seasonal, spec == class so timeout instantly. if not, timeout when spec ~= class
+            data.spec = newSpec or data.spec or class or "?"
+            data.icon = newIcon
+            if C_Realm.IsSeasonal() or data.spec ~= class then
+                data.specExpirationTime = timeNow + TIMEOUT
+            end
     end
+    
 end
 
 function AiL.notifyInspections(unit)
@@ -246,8 +260,9 @@ function AiL.notifyInspections(unit)
     if not IsSpecThrottled(unit) and IsCustomClass(unit) then
         C_CharacterAdvancement.InspectUnit(unit)
     end
-    if IsHeroClass(unit) then
+    if not IsCustomClass(unit) then
         if C_MysticEnchant.CanInspect(unit) and not IsSpecThrottled(unit) then
+            AiL.print("Requesting Mystic Enchant inspect for ",UnitName(unit))
             C_MysticEnchant.Inspect(unit, true)
         end
     end

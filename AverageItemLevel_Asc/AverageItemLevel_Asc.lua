@@ -2,6 +2,11 @@ AiL = select(2, ...)
 AiL.Options = AiL.Options or {}
 AiL.hiddenText = "|HAiLC|h" -- used as hidden text to be able to find our custom line in the tooltip easier
 AiL.specListLookup = AiL.specListLookup or {}
+local IsHeroClass = IsHeroClass
+local C_Realm = C_Realm
+local UnitLevel = UnitLevel
+local UnitIsPlayer = UnitIsPlayer
+
 local function OnTooltipSetUnitHandler(self)
     local _, unit = self:GetUnit()
     if not unit or not UnitIsPlayer(unit) then
@@ -37,7 +42,7 @@ local function GameTooltipOnEvent(self, event, ...)
                     AiL.getCacheForUnit(unit).true_ilvl))
             end
         end
-    elseif (event == "MYSTIC_ENCHANT_INSPECT_RESULT" and IsHeroClass(unit)) or
+    elseif (event == "MYSTIC_ENCHANT_INSPECT_RESULT" and not IsCustomClass(unit)) or
         (event == "INSPECT_CHARACTER_ADVANCEMENT_RESULT" and select(1, ...) == "CA_INSPECT_OK") then
         AiL.updateCacheSpec(unit)
         for i = 1, self:NumLines() do
