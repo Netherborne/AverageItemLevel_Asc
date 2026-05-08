@@ -10,7 +10,7 @@ local UnitExists = UnitExists
 
 local function OnTooltipSetUnitHandler(self)
     local _, unit = self:GetUnit()
-    if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
+    if not unit or not UnitIsPlayer(unit) then
         return
     end
     local unitCache = AiL.getCacheForUnit(unit)
@@ -28,7 +28,7 @@ local function OnTooltipSetUnitHandler(self)
 end
 
 local function updateSpecTooltipText(self, unit)
-    if not unit or not UnitExists(unit) then return end
+    if not unit then return end
     for i = 1, self:NumLines() do
         local leftLine = _G["GameTooltipTextLeft" .. i]
         if leftLine then
@@ -45,7 +45,7 @@ local function updateSpecTooltipText(self, unit)
 end
 
 local function updateIlvlTooltipText(self, unit)
-    if not AiL.Options.Ilvl or not unit or not UnitExists(unit) then
+    if not AiL.Options.Ilvl or not unit then
         return
     end
     for i = 1, self:NumLines() do

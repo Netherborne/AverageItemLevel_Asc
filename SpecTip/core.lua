@@ -185,7 +185,7 @@ local function IsSpecThrottled(unit)
 end
 
 function AiL.updateCacheSpec(unit)
-    if not unit or not UnitExists(unit) then return end
+    if not unit then return end
     
     if IsSpecThrottled(unit) then
         return
