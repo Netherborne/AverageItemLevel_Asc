@@ -4,11 +4,14 @@
 
 
 AiL = select(2, ...)
--- Set default options if not already set
+
 if not AiL then return end
+AiL.Config = AiL.Config or {}
+AiL.Config.TIMEOUT = 180
+AiL.Config.MAX_INSPECTIONS_TO_TIMEOUT = 5
+
 
 local addonName = "SpecTip"
-
 SpecTipOptions = SpecTipOptions or {}
 
 local defaults = {
@@ -16,9 +19,6 @@ local defaults = {
     Ilvl = true,
     Debug = false,
 }
-
-local initFrame = CreateFrame("Frame")
-
 
 
 local function createSettingsPanel()
@@ -101,6 +101,7 @@ local function createSettingsPanel()
 
 end
 
+local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:SetScript("OnEvent", function(self, event, name)
     if name ~= addonName then

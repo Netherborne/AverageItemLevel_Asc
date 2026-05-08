@@ -1,13 +1,12 @@
 AiL = select(2, ...)
 local CACHE = {}
-local TIMEOUT = 180
-local MAX_INSPECTIONS_TILL_TIMEOUT = 5
 local _print = print
 local IsHeroClass = IsHeroClass
 local C_Realm = C_Realm
 local C_CharacterAdvancement = C_CharacterAdvancement
 local C_MysticEnchant = C_MysticEnchant
-
+local TIMEOUT = AiL.Config.TIMEOUT
+local MAX_INSPECTIONS_TO_TIMEOUT = AiL.Config.MAX_INSPECTIONS_TO_TIMEOUT
 
 AiL.specListLookup = {
     -- PYROMANCER
@@ -283,7 +282,7 @@ function AiL.updateCacheIlvl(unit)
         data.true_ilvl = ilvl
 		GameTooltip:GetScript("OnEvent")(GameTooltip,"AIL_FINAL_INSPECT_REACHED")
     elseif data.ilvl ~= ilvl or ilvl == 0 then
-        if data.inspections >= MAX_INSPECTIONS_TILL_TIMEOUT then
+        if data.inspections >= MAX_INSPECTIONS_TO_TIMEOUT then
             AiL.print("Reached inspection limit for", UnitName(unit), ",stopping.")
             data.ilvlExpirationTime = timeNow + TIMEOUT
             data.inspections = 0
