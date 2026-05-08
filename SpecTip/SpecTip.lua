@@ -25,6 +25,7 @@ local function OnTooltipSetUnitHandler(self)
         self:AddLine(AiL.hiddenText .. icon .. color:WrapText(spec))
     end
     AiL.notifyInspections(unit)
+    GameTooltip:Show()
 end
 
 local function updateSpecTooltipText(self, unit)
