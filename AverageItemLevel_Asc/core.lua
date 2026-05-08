@@ -210,10 +210,10 @@ function AiL.updateCacheSpec(unit)
             return
         end
 
-        for i, entry in ipairs(entries) do
-            local rank = entry.Rank
-            local internalID = entry.EntryId
-            local entry = C_CharacterAdvancement.GetEntryByInternalID(entry.EntryId)
+        for i, v in ipairs(entries) do
+            local rank = v.Rank
+            local internalID = v.EntryId
+            local entry = C_CharacterAdvancement.GetEntryByInternalID(v.EntryId)
             if entry then
                 local spellID = entry.Spells[rank]
                 AiL.print("Inspecting CoA build entry ", i, " with spellID ", spellID, " for ", UnitName(unit))
