@@ -7,7 +7,7 @@ AiL = select(2, ...)
 -- Set default options if not already set
 if not AiL then return end
 
-local addonName = "SpecTip_Asc"
+local addonName = "SpecTip"
 
 SpecTipOptions = SpecTipOptions or {}
 
