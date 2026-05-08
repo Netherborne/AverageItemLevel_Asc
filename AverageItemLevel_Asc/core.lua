@@ -120,7 +120,7 @@ function AiL.toggleDebug()
     _print(AiL.Options.Debug and "Debug turned on." or "Debug turned off.")
 end
 ------ CACHE ------
-local function GetCache()
+function AiL.getCache()
     return CACHE
 end
 
@@ -216,6 +216,7 @@ function AiL.updateCacheSpec(unit)
             local entry = C_CharacterAdvancement.GetEntryByInternalID(entry.EntryId)
             if entry then
                 local spellID = entry.Spells[rank]
+                AiL.print("Inspecting CoA build entry ", i, " with spellID ", spellID, " for ", UnitName(unit))
                 if AiL.specListLookup[spellID] then
                     data.spec = AiL.specListLookup[spellID][1]
 					AiL.print("Inspecting CoA class spec ", UnitName(unit), "is now", data.spec)
@@ -260,7 +261,7 @@ function AiL.notifyInspections(unit)
     if not IsSpecThrottled(unit) and IsCustomClass(unit) then
         C_CharacterAdvancement.InspectUnit(unit)
     end
-    if not IsCustomClass(unit) then
+    if IsHeroClass(unit) or C_Realm.IsLive() then
         if C_MysticEnchant.CanInspect(unit) and not IsSpecThrottled(unit) then
             AiL.print("Requesting Mystic Enchant inspect for ",UnitName(unit))
             C_MysticEnchant.Inspect(unit, true)
