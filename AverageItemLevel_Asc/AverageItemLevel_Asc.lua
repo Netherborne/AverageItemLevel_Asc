@@ -17,8 +17,12 @@ local function OnTooltipSetUnitHandler(self)
     local icon = AiL.Options.ShowIcon and unitCache.icon or ""
     local color = AiL.getColorforUnitSpec(unit, spec)
     self:AddLine(" ")
-    self:AddDoubleLine(AiL.hiddenText .. icon .. color:WrapText(spec),
-        AiL.getColoredIlvlString(UnitLevel(unit), AiL.getCacheForUnit(unit).true_ilvl))
+    if AiL.Options.Ilvl then
+        self:AddDoubleLine(AiL.hiddenText .. icon .. color:WrapText(spec),
+            AiL.getColoredIlvlString(UnitLevel(unit), AiL.getCacheForUnit(unit).true_ilvl))
+    else
+        self:AddLine(AiL.hiddenText .. icon .. color:WrapText(spec))
+    end
     AiL.notifyInspections(unit)
 end
 
@@ -36,6 +40,9 @@ local function updateSpecTooltipText(self, unit)
 end
 
 local function updateIlvlTooltipText(self, unit)
+    if not AiL.Options.Ilvl then
+        return
+    end
     for i = 1, self:NumLines() do
         if string.match(_G["GameTooltipTextLeft" .. i]:GetText() or "", AiL.hiddenText) then
             _G["GameTooltipTextRight" .. i]:SetText(AiL.getColoredIlvlString(UnitLevel(unit),AiL.getCacheForUnit(unit).true_ilvl))
@@ -50,10 +57,14 @@ local function GameTooltipOnEvent(self, event, ...)
         return
     end
     if event == "INSPECT_TALENT_READY" then
-        AiL.updateCacheIlvl(unit)
-        updateIlvlTooltipText(self, unit)
+        if AiL.Options.Ilvl then
+            AiL.updateCacheIlvl(unit)
+            updateIlvlTooltipText(self, unit)
+        end
     elseif event == "AIL_FINAL_INSPECT_REACHED" then
-        updateIlvlTooltipText(self, unit)
+        if AiL.Options.Ilvl then
+            updateIlvlTooltipText(self, unit)
+        end
     elseif (event == "MYSTIC_ENCHANT_INSPECT_RESULT" and (IsHeroClass(unit) or C_Realm.IsLive())) or
         (event == "INSPECT_CHARACTER_ADVANCEMENT_RESULT" and select(1, ...) == "CA_INSPECT_OK") then
         AiL.updateCacheSpec(unit)

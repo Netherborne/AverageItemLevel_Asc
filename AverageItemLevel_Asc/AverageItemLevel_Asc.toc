@@ -3,5 +3,7 @@
 ## Notes: Displays the average item level of a player in their tooltip
 ## Author: Netherborne
 ## Version: 1.2
+## SavedVariables: AverageItemLevelOptions
+config.lua
 core.lua
 AverageItemLevel_Asc.lua

@@ -8,9 +8,7 @@ local C_Realm = C_Realm
 local C_CharacterAdvancement = C_CharacterAdvancement
 local C_MysticEnchant = C_MysticEnchant
 
-AiL.Options = AiL.Options or {}
-AiL.Options.ShowIcon = true -- CHANGE THIS TO false TO DISABLE ICON
-AiL.Options.Debug = false
+
 AiL.specListLookup = {
     -- PYROMANCER
     [92126] = {'Flameweaving Pyromancer','Ability_Mage_FieryPayback'},
@@ -254,9 +252,8 @@ function AiL.notifyInspections(unit)
     if AscensionInspectFrame and AscensionInspectFrame:IsShown() then
         return
     end
-    if not IsIlvlThrottled(unit) and CanInspect(unit) then
+    if AiL.Options.Ilvl and not IsIlvlThrottled(unit) and CanInspect(unit) then
         NotifyInspect(unit)
-
     end
     if not IsSpecThrottled(unit) and IsCustomClass(unit) then
         C_CharacterAdvancement.InspectUnit(unit)
@@ -267,11 +264,10 @@ function AiL.notifyInspections(unit)
             C_MysticEnchant.Inspect(unit, true)
         end
     end
-
 end
 
 function AiL.updateCacheIlvl(unit)
-    if IsIlvlThrottled(unit) then
+    if not AiL.Options.Ilvl or IsIlvlThrottled(unit) then
         return
     end
     local ilvl = UnitAverageItemLevel(unit)
