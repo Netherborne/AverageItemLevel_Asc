@@ -94,8 +94,7 @@ local function createSettingsPanel()
     InterfaceOptions_AddCategory(panel)
 
     -- Slash command to open the options
-    SLASH_SpecTip1 = "/ail"
-    SLASH_SpecTip2 = "/SpecTip"
+    SLASH_SpecTip1 = "/stip"
     SlashCmdList["SpecTip"] = function()
         InterfaceOptionsFrame_OpenToCategory(addonName)
     end 
