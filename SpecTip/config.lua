@@ -1,4 +1,4 @@
--- Config.lua for AverageItemLevel addon
+-- Config.lua for SpecTip addon
 -- Handles the addon settings panel for WoW 3.3.5
 
 
@@ -7,9 +7,9 @@ AiL = select(2, ...)
 -- Set default options if not already set
 if not AiL then return end
 
-local addonName = "AverageItemLevel_Asc"
+local addonName = "SpecTip_Asc"
 
-AverageItemLevelOptions = AverageItemLevelOptions or {}
+SpecTipOptions = SpecTipOptions or {}
 
 local defaults = {
     ShowIcon = true,
@@ -94,9 +94,9 @@ local function createSettingsPanel()
     InterfaceOptions_AddCategory(panel)
 
     -- Slash command to open the options
-    SLASH_AVERAGEITEMLEVEL1 = "/ail"
-    SLASH_AVERAGEITEMLEVEL2 = "/averageitemlevel"
-    SlashCmdList["AVERAGEITEMLEVEL"] = function()
+    SLASH_SpecTip1 = "/ail"
+    SLASH_SpecTip2 = "/SpecTip"
+    SlashCmdList["SpecTip"] = function()
         InterfaceOptionsFrame_OpenToCategory(addonName)
     end 
 
@@ -108,12 +108,12 @@ initFrame:SetScript("OnEvent", function(self, event, name)
         return
     end
 
-    AverageItemLevelOptions = AverageItemLevelOptions or {}
+    SpecTipOptions = SpecTipOptions or {}
     for key, value in pairs(defaults) do
-        if AverageItemLevelOptions[key] == nil then
-            AverageItemLevelOptions[key] = value
+        if SpecTipOptions[key] == nil then
+            SpecTipOptions[key] = value
         end
     end
-    AiL.Options = AverageItemLevelOptions
+    AiL.Options = SpecTipOptions
     createSettingsPanel()
 end)

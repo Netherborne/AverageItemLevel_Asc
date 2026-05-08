@@ -1,9 +1,9 @@
 ## Interface: 30300
-## Title: AverageItemLevel
+## Title: SpecTip
 ## Notes: Displays the average item level of a player in their tooltip
 ## Author: Netherborne
 ## Version: 1.2
-## SavedVariables: AverageItemLevelOptions
+## SavedVariables: SpecTipOptions
 config.lua
 core.lua
-AverageItemLevel_Asc.lua
+SpecTip_Asc.lua

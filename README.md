@@ -1,4 +1,4 @@
-# AverageItemLevel Ascension
+# SpecTip
 Display specialization and average item level on player tooltips.
 
 

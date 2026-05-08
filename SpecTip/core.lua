@@ -270,7 +270,7 @@ function AiL.updateCacheIlvl(unit)
     if not AiL.Options.Ilvl or IsIlvlThrottled(unit) then
         return
     end
-    local ilvl = UnitAverageItemLevel(unit)
+    local ilvl = UnitSpecTip(unit)
     if ilvl == nil then
         return
     end
