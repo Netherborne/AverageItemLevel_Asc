@@ -7,6 +7,17 @@ local C_CharacterAdvancement = C_CharacterAdvancement
 local C_MysticEnchant = C_MysticEnchant
 local TIMEOUT = AiL.Config.TIMEOUT
 local MAX_INSPECTIONS_TO_TIMEOUT = AiL.Config.MAX_INSPECTIONS_TO_TIMEOUT
+local GetTime = GetTime
+local UnitGUID = UnitGUID
+local UnitName = UnitName
+local UnitClass = UnitClass
+local CanInspect = CanInspect
+local NotifyInspect = NotifyInspect
+local UnitAverageItemLevel = UnitAverageItemLevel
+local GetInventoryItemLink = GetInventoryItemLink
+local GetItemInfo = GetItemInfo
+local GetSpellInfo = GetSpellInfo
+local InCombatLockdown = InCombatLockdown
 
 AiL.specListLookup = {
     -- PYROMANCER
@@ -127,14 +138,14 @@ function AiL.getCacheForUnit(unit)
     end
     local guid = UnitGUID(unit)
     if not CACHE[guid] then
-		-- INITIAL DATA BEFORE CACHE
+        -- INITIAL DATA BEFORE CACHE
 		
         local spec, iconName = UnitSpecAndIcon(unit)
-		AiL.print("No cache found for ",UnitName(unit),". Initializing to",spec)
+        AiL.print("No cache found for ",UnitName(unit),". Initializing to",spec)
         if IsCustomClass(unit) then
             spec = (spec == UnitClass(unit)) and spec or (spec .. " " .. UnitClass(unit))
         end
-        local icon = " |T" .. iconName .. ".blp:32:32:0:0|t "
+        local icon = " |T" .. (iconName or "INV_Misc_QuestionMark") .. ".blp:32:32:0:0|t "
         CACHE[guid] = {
             spec = spec,
             icon = icon,
@@ -174,18 +185,21 @@ local function IsSpecThrottled(unit)
 end
 
 function AiL.updateCacheSpec(unit)
+    if not unit or not UnitExists(unit) then return end
+    
     if IsSpecThrottled(unit) then
         return
     end
+    
     local timeNow = GetTime()
     local class, classFile = UnitClass(unit)
     local newSpec, newIcon = UnitSpecAndIcon(unit)
-    newIcon = " |T" .. newIcon .. ".blp:32:32:0:0|t "
+    newIcon = " |T" .. (newIcon or "INV_Misc_QuestionMark") .. ".blp:32:32:0:0|t "
     local data = AiL.getCacheForUnit(unit)
     -- Is CoA --
     if IsCustomClass(unit) then
         data.spec = newSpec
-		
+        
         if newSpec ~= UnitClass(unit) then -- UnitSpecAndIcon returned Specialization so we need to append the class
             data.spec = newSpec .. " " .. UnitClass(unit)
             data.icon = newIcon
@@ -197,13 +211,13 @@ function AiL.updateCacheSpec(unit)
         ---------------- COA TEST ---------------
         local activeSpec = C_CharacterAdvancement.GetInspectInfo(unit) or 1
         if not activeSpec then
-			AiL.print("active spec of ",UnitName(unit)," is null.")
+            AiL.print("active spec of ", tostring(UnitName(unit)), " is null.")
             return
         end
 
         local entries = C_CharacterAdvancement.GetInspectedBuild(unit, activeSpec)
-        if not entries then
-            AiL.print("GetInspectedBuild did not return entries for spec ",activeSpec," of",UnitName(unit))
+        if not entries or type(entries) ~= "table" then
+            AiL.print("GetInspectedBuild did not return entries for spec ",activeSpec," of", UnitName(unit))
             return
         end
 
@@ -216,39 +230,49 @@ function AiL.updateCacheSpec(unit)
                 AiL.print("Inspecting CoA build entry ", i, " with spellID ", spellID, " for ", UnitName(unit))
                 if AiL.specListLookup[spellID] then
                     data.spec = AiL.specListLookup[spellID][1]
-					AiL.print("Inspecting CoA class spec ", UnitName(unit), "is now", data.spec)
+                    AiL.print("Inspecting CoA class spec ", UnitName(unit), "is now", data.spec)
                     data.icon = "Interface\\Icons\\".. AiL.specListLookup[spellID][2]
                     data.icon = " |T" .. data.icon .. ".blp:32:32:0:0|t "
-					data.specExpirationTime = timeNow + TIMEOUT
+                    data.specExpirationTime = timeNow + TIMEOUT
                     return
                 end
             end
         end
 
-		AiL.print(UnitName(unit), "no spec info found for ActiveSpec=",activeSpec)
+        AiL.print(UnitName(unit), "no spec info found for ActiveSpec=",activeSpec)
     
     -- Is Hero --
     elseif IsHeroClass(unit) or C_Realm.IsLive() then
-            local legendaryEnchantID = MysticEnchantUtil.GetLegendaryEnchantID(unit)
-            if legendaryEnchantID then
-                local name, _, icon = GetSpellInfo(legendaryEnchantID)
-                if icon then
-                    newSpec = name
-                    newIcon = " |T" .. icon .. ".blp:32:32:0:0|t "
-                end
-            end
-            -- if seasonal, spec == class so timeout instantly. if not, timeout when spec ~= class
-            data.spec = newSpec or data.spec or class or "?"
-            data.icon = newIcon
-            if C_Realm.IsSeasonal() or data.spec ~= class then
-                data.specExpirationTime = timeNow + TIMEOUT
-            end
-    end
-    
+			local legendaryEnchantID = MysticEnchantUtil.GetLegendaryEnchantID(unit)
+			if legendaryEnchantID then
+				local name, _, icon = GetSpellInfo(legendaryEnchantID)
+				if icon then
+					newSpec = name
+					newIcon = " |T" .. icon .. ".blp:32:32:0:0|t "
+				end
+			end  
+            -- if seasonal, spec == class so timeout instantly. if not, timeout when spec ~= class			
+			data.spec = newSpec or data.spec or class or "?"
+			data.icon = newIcon
+			if C_Realm.IsSeasonal() or data.spec ~= class then
+				data.specExpirationTime = timeNow + TIMEOUT
+			end
+		else        
+			-- catch-all for seasonal draft if not caught above?
+			data.spec = newSpec or class
+			data.icon = newIcon
+			data.specExpirationTime = timeNow + TIMEOUT
+		end
 end
 
 function AiL.notifyInspections(unit)
-    if AscensionInspectFrame and AscensionInspectFrame:IsShown() then
+    if not unit or not UnitExists(unit) then return end
+
+    if AscensionInspectFrame and AscensionInspectFrame:IsShown() then	
+        return
+    end
+	-- CombatLockdown is to verify with inspect...
+    if InCombatLockdown() then
         return
     end
     if AiL.Options.Ilvl and not IsIlvlThrottled(unit) and CanInspect(unit) then
@@ -265,14 +289,53 @@ function AiL.notifyInspections(unit)
     end
 end
 
+-- Fallback Scanner when Ascension's UnitAverageItemLevel returns nil or 0
+-- this one skips shirt slot so value may differ from API
+function AiL.CalculateManualIlvl(unit)
+    local totalIlvl = 0
+    local has2H = false
+    for slot = 1, 18 do
+        if slot ~= 4 then 
+            local link = GetInventoryItemLink(unit, slot)
+            if link then
+                local _, _, _, ilvl, _, _, _, _, equipSlot = GetItemInfo(link)
+                if ilvl then
+                    totalIlvl = totalIlvl + ilvl
+                    if slot == 16 and equipSlot == "INVTYPE_2HWEAPON" then has2H = true end
+                end
+            end
+        end
+    end
+    
+    local ohLink = GetInventoryItemLink(unit, 17)
+    if has2H and not ohLink then
+        local mhLink = GetInventoryItemLink(unit, 16)
+        if mhLink then
+            local _, _, _, mhIlvl = GetItemInfo(mhLink)
+            if mhIlvl then totalIlvl = totalIlvl + mhIlvl end
+        end
+    end
+    
+    local divisor = 16
+    if GetInventoryItemLink(unit, 18) then divisor = 17 end
+    if totalIlvl > 0 then return totalIlvl / divisor end
+    return 0
+end
+
 function AiL.updateCacheIlvl(unit)
+    if not unit or not UnitExists(unit) then return end
+
     if not AiL.Options.Ilvl or IsIlvlThrottled(unit) then
         return
     end
     local ilvl = UnitAverageItemLevel(unit)
+	-- def
+    if not ilvl or ilvl == 0 then
+        ilvl = AiL.CalculateManualIlvl(unit)
+    end
     if ilvl == nil then
         return
-    end
+    end 
     local data = AiL.getCacheForUnit(unit)
     local timeNow = GetTime()
     if ilvl > 0 and data.ilvl == ilvl then
@@ -280,7 +343,11 @@ function AiL.updateCacheIlvl(unit)
         data.ilvlExpirationTime = timeNow + TIMEOUT
         data.inspections = 0
         data.true_ilvl = ilvl
-		GameTooltip:GetScript("OnEvent")(GameTooltip,"AIL_FINAL_INSPECT_REACHED")
+		-- def
+        local onEventScript = GameTooltip:GetScript("OnEvent")
+        if onEventScript then
+            onEventScript(GameTooltip, "AIL_FINAL_INSPECT_REACHED")
+        end
     elseif data.ilvl ~= ilvl or ilvl == 0 then
         if data.inspections >= MAX_INSPECTIONS_TO_TIMEOUT then
             AiL.print("Reached inspection limit for", UnitName(unit), ",stopping.")
@@ -291,7 +358,7 @@ function AiL.updateCacheIlvl(unit)
         AiL.print("Inspect result for", UnitName(unit), ":", data.ilvl, "-->", ilvl, ",repeating...")
         data.ilvlExpirationTime = 0
         data.ilvl = ilvl
-        -- scaling reporting wrong ilvl workaround
+        -- scaling reporting wrong ilvl workaround        
         AiL.notifyInspections(unit)
         data.inspections = data.inspections + 1
     end

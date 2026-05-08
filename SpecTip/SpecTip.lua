@@ -6,10 +6,11 @@ local IsHeroClass = IsHeroClass
 local C_Realm = C_Realm
 local UnitLevel = UnitLevel
 local UnitIsPlayer = UnitIsPlayer
+local UnitExists = UnitExists
 
 local function OnTooltipSetUnitHandler(self)
     local _, unit = self:GetUnit()
-    if not unit or not UnitIsPlayer(unit) then
+    if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
         return
     end
     local unitCache = AiL.getCacheForUnit(unit)
@@ -26,34 +27,42 @@ local function OnTooltipSetUnitHandler(self)
     AiL.notifyInspections(unit)
 end
 
-
 local function updateSpecTooltipText(self, unit)
+    if not unit or not UnitExists(unit) then return end
     for i = 1, self:NumLines() do
-        if string.match(_G["GameTooltipTextLeft" .. i]:GetText() or "", AiL.hiddenText) then
-            local unitCache = AiL.getCacheForUnit(unit)
-            local spec = unitCache.spec
-            local icon = AiL.Options.ShowIcon and unitCache.icon or ""
-            local color = AiL.getColorforUnitSpec(unit, spec)
-            _G["GameTooltipTextLeft" .. i]:SetText(AiL.hiddenText .. icon .. color:WrapText(spec))
+        local leftLine = _G["GameTooltipTextLeft" .. i]
+        if leftLine then
+            local text = leftLine:GetText() or ""
+            if string.find(text, AiL.hiddenText, 1, true) then
+                local unitCache = AiL.getCacheForUnit(unit)
+                local spec = unitCache.spec
+                local icon = AiL.Options.ShowIcon and unitCache.icon or ""
+                local color = AiL.getColorforUnitSpec(unit, spec)
+                leftLine:SetText(AiL.hiddenText .. icon .. color:WrapText(spec))
+            end
         end
     end
 end
 
 local function updateIlvlTooltipText(self, unit)
-    if not AiL.Options.Ilvl then
+    if not AiL.Options.Ilvl or not unit or not UnitExists(unit) then
         return
     end
     for i = 1, self:NumLines() do
-        if string.match(_G["GameTooltipTextLeft" .. i]:GetText() or "", AiL.hiddenText) then
-            _G["GameTooltipTextRight" .. i]:SetText(AiL.getColoredIlvlString(UnitLevel(unit),AiL.getCacheForUnit(unit).true_ilvl))
+        local leftLine = _G["GameTooltipTextLeft" .. i]
+        local rightLine = _G["GameTooltipTextRight" .. i]
+        if leftLine and rightLine then
+            local text = leftLine:GetText() or ""
+            if string.find(text, AiL.hiddenText, 1, true) then
+                rightLine:SetText(AiL.getColoredIlvlString(UnitLevel(unit), AiL.getCacheForUnit(unit).true_ilvl))
+            end
         end
     end
 end
 
-
 local function GameTooltipOnEvent(self, event, ...)
     local _, unit = self:GetUnit()
-    if not unit or not UnitIsPlayer(unit) then
+    if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
         return
     end
     if event == "INSPECT_TALENT_READY" then
