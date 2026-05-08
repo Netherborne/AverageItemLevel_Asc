@@ -6,4 +6,4 @@
 ## SavedVariables: SpecTipOptions
 config.lua
 core.lua
-SpecTip_Asc.lua
+SpecTip.lua
