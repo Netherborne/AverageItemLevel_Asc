@@ -1,6 +1,6 @@
 ## Interface: 30300
 ## Title: SpecTip
-## Notes: Displays the average item level of a player in their tooltip
+## Notes: Displays information on player tooltips.
 ## Author: Netherborne
 ## Version: 1.2
 ## SavedVariables: SpecTipOptions
