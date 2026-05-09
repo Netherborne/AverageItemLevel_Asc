@@ -171,6 +171,18 @@ function AiL.resetAllExpirations()
     end
 end
 
+function AiL.cleanupStaleCache()
+    local currentTime = GetTime()
+    local staleThreshold = currentTime - 600  -- 10 minutes ago
+    for guid, data in pairs(CACHE) do
+        if data.specExpirationTime > 0 and data.ilvlExpirationTime > 0 and
+           data.specExpirationTime < staleThreshold and data.ilvlExpirationTime < staleThreshold then
+            CACHE[guid] = nil
+            AiL.print("Removed stale cache entry for GUID:", guid)
+        end
+    end
+end
+
 function AiL.SetInspectTimeout(newTimeout)
     TIMEOUT = newTimeout > 0 and newTimeout or 1
     AiL.resetAllExpirations()

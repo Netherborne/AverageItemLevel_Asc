@@ -95,25 +95,35 @@ local function createSettingsPanel()
 
     -- Slash command to open the options
     SLASH_SpecTip1 = "/stip"
-    SlashCmdList["SpecTip"] = function()
-        InterfaceOptionsFrame_OpenToCategory(addonName)
+    SlashCmdList["SpecTip"] = function(msg)
+        if msg == "cleanup" then
+            AiL.cleanupStaleCache()
+            _print("SpecTip: Cache cleanup completed.")
+        else
+            InterfaceOptionsFrame_OpenToCategory(addonName)
+        end
     end 
 
 end
 
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
-initFrame:SetScript("OnEvent", function(self, event, name)
-    if name ~= addonName then
-        return
-    end
+initFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-    SpecTipOptions = SpecTipOptions or {}
-    for key, value in pairs(defaults) do
-        if SpecTipOptions[key] == nil then
-            SpecTipOptions[key] = value
+initFrame:SetScript("OnEvent", function(self, event, name)
+    if event == "ADDON_LOADED" and name ~= addonName then
+        return
+    elseif event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
+        AiL.cleanupStaleCache()
+    elseif event == "ADDON_LOADED" then
+        SpecTipOptions = SpecTipOptions or {}
+        for key, value in pairs(defaults) do
+            if SpecTipOptions[key] == nil then
+                SpecTipOptions[key] = value
+            end
         end
+        AiL.Options = SpecTipOptions
+        createSettingsPanel()
     end
-    AiL.Options = SpecTipOptions
-    createSettingsPanel()
 end)
