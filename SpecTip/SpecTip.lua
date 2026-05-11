@@ -13,7 +13,11 @@ local function OnTooltipSetUnitHandler(self)
     if not unit or not UnitIsPlayer(unit) then
         return
     end
-    local unitCache = AiL.getCacheForUnit(unit)
+    local check,unitCache = pcall(AiL.getCacheForUnit, unit)
+    if not check or not unitCache or not unitCache.spec then
+        AiL.print("ERR","Error retrieving cache for unit: " .. (unit or "nil"))
+        return
+    end
     local spec = unitCache.spec
     local icon = AiL.Options.ShowIcon and unitCache.icon or ""
     local color = AiL.getColorforUnitSpec(unit, spec)
@@ -24,8 +28,7 @@ local function OnTooltipSetUnitHandler(self)
     else
         self:AddLine(AiL.hiddenText .. icon .. color:WrapText(spec))
     end
-    AiL.notifyInspections(unit)
-    GameTooltip:Show()
+    AiL.notifyInspections(unit,"ALL")
 end
 
 local function updateSpecTooltipText(self, unit)
@@ -66,7 +69,14 @@ local function GameTooltipOnEvent(self, event, ...)
     if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
         return
     end
-    if event == "INSPECT_TALENT_READY" then
+    if not AiL.lastInspectGUID or AiL.lastInspectGUID ~= UnitGUID(unit) then
+        AiL.print("WRN","Received event", event, "while mouseover GUID is ",UnitGUID(unit), "but inspection results were for", AiL.lastInspectGUID,". Ignoring event.");
+        return
+    end
+
+    if event == "AIL_COA_SPEC_FOUND" then
+        updateSpecTooltipText(self, unit)
+    elseif event == "INSPECT_TALENT_READY" then
         if AiL.Options.Ilvl then
             AiL.updateCacheIlvl(unit)
             updateIlvlTooltipText(self, unit)
