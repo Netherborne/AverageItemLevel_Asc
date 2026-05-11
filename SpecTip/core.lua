@@ -19,101 +19,99 @@ local GetItemInfo = GetItemInfo
 local GetSpellInfo = GetSpellInfo
 local InCombatLockdown = InCombatLockdown
 AiL.lastInspectGUID = nil
-AiL.specListLookup = {
+AiL.specListLookup = { -- LVL 10 passive internalID to specID
     -- PYROMANCER
-    [92126] = {'Flameweaving','Ability_Mage_FieryPayback'},
-    [92124] = {'Incineration','Ability_Warlock_Backdraft'},
-    [92128] = {'Draconic','INV_Weapon_Hand_06'},
+    [92126] = 37,
+    [92124] = 38,
+    [300755] = 39,
     -- CULTIST
-    [92131] = {'Heretic','spell_shadow_rune'},
-    [92130] = {'Corruption','Achievement_Boss_CThun'},
-    [680750] = {'Dreadnought','inv_shield_grimbatolraid_d_02'},
-    [92129] = {'Godblade','INV_Sword_61'},
+    [92131] = 40,
+    [92130] = 41,
+    [680750] = 96,
+    [92129] = 42,
     -- VENOMANCER
-    [92144] = {'Fortitude','ability_mount_hordescorpionamber'},
-    [92143] = {'Stalking','inv_pet_spiderdemon'},
-    [92142] = {'Rotweaver','_LiquidStone_Poison'},
-    [680800] = {'Vizier','rogue_paralytic_poison'},
-    [680837] = {'Vizier','rogue_paralytic_poison'},
+    [92144] = 52,
+    [92143] = 53,
+    [92142] = 54,
+    [680800] = 101,
     -- WITCH HUNTER
-    [707064] = {'Black Knight','inv_helmet_23'},
-    [92093] = {'Darkness','Ability_Warlock_ImprovedSoulLeech'},
-    [92091] = {'Boltslinger','_d3preparation'},
-    [92094] = {'Inquisition','Ability_Rogue_StayofExecution'},
-    [707063] = {'Inquisition','Ability_Rogue_StayofExecution'},
+    [707064] = 97,
+    [92093] = 11,
+    [92091] = 10,
+    [92094] = 12,
     -- REAPER
-    [92145] = {'Harvest','ability_rogue_sealfate'},
-    [92147] = {'Domination','ability_touchofanimus'},
-    [92146] = {'Soul','inv_artifact_thalkielsdiscord'},
+    [92145] = 56,
+    [92147] = 57,
+    [92146] = 55,
     -- TEMPLAR
-    [92111] = {'Crusader','Ability_Paladin_BlessedHands'},
-    [92109] = {'Oathkeeper','_D3blindingflash'},
-    [92108] = {'Zealot','_D3deadlyreach'},
+    [92111] = 24,
+    [92109] = 22,
+    [92108] = 23,
     
     -- WITCH DOCTOR
-    [92086] = {'Shadowhunting','Ability_Hunter_SurvivalInstincts'},
-    [92085] = {'Brewing','INV_Misc_Cauldron_Nature'},
-    [92084] = {'Voodoo','INV_Misc_Idol_02'},
+    [92086] = 4,
+    [92085] = 6,
+    [92084] = 5,
     -- FELSWORN
-    [92089] = {'Tyrant','Ability_Warlock_DemonicPower'},
-    [92087] = {'Slaying','INV_Weapon_Glave_01'},
-    [92088] = {'Infernal','Spell_Shadow_FingerOfDeath'},
+    [92089] = 9,
+    [92087] = 8,
+    [92088] = 7,
     -- BARBARIAN
-    [92083] = {'Ancestry','Achievement_Dungeon_UtgardeKeep_Normal'},
-    [92082] = {'Headhunting','5_axe_(3)_Border'},
-    [92081] = {'Brutality','Ability_Warrior_BloodFrenzy'},
+    [92083] = 3,
+    [92082] = 1,
+    [92081] = 2,
     -- PRIMALIST
-    [92150] = {'Life','Spell_Shaman_BlessingOfEternals'},
-    [92148] = {'Wildwalker','_BearAttack_BrownFire'},
-    [92149] = {'Geomancy','inv_elementalearth2'},
-    [680395] = {'Mountain King','item_earthenmight'},
+    [92150] = 58,
+    [92148] = 59,
+    [92149] = 95,
+    [680395] = 60,
     -- SUN CLERIC
-    [707072] = {'Valkyrie','inv_valkiergoldpet'},
-    [92135] = {'Piety','ability_racial_finalverdict'},
-    [92137] = {'Seraphim','Spell_Holy_Crusade'},
-    [92136] = {'Blessings','Ability_Paladin_SacredCleansing'},
+    [707072] = 47,
+    [92135] = 46,
+    [92137] = 48,
+    [92136] = 98,
     -- RANGER
-    [92115] = {'Archery','Ability_Hunter_LongShots'},
-    [92117] ={'Farstrider','INV_Misc_Map02'},
-    [92116] = {'Brigand','ability_rogue_rollthebones02'},
+    [92115] = 28,
+    [92117] = 29,
+    [92116] = 30,
     -- BLOODMAGE
-    [92114] = {'Eternal','achievement_dungeon_jeshowlis'},
-    [681078] = {'Fleshweaver','custom_t_handsofblood_border'},
-    [92112] = {'Sanguine','Spell_Shadow_LifeDrain'},
-    [92113] = {'Accursed','Spell_DeathKnight_Gnaw_Ghoul'},
+    [92114] = 99,
+    [681078] = 25,
+    [92112] = 26,
+    [92113] = 27,
     -- RUNEMASTER
-    [92153] = {'Engravement','70_inscription_vantus_rune_azure'},
-    [92152] = {'Glyphic','_D3arcanetorrent'},
-    [92154] = {'Riftblade','INV_Weapon_Shortblade_79'},
+    [92153] = 61,
+    [92152] = 62,
+    [92154] = 63,
     -- TINKER
-    [92141] = {'Mechanics','INV_Misc_EngGizmos_06'},
-    [92140] = {'Invention','INV_Gizmo_RocketBootExtreme'},
-    [92138] = {'Demolition','INV_Musket_04'},
+    [92141] = 50,
+    [92140] = 51,
+    [92138] = 49,
     -- STORMBRINGER
-    [92097] = {'Wind','Spell_Nature_InvisibilityTotem'},
-    [92098] ={'Maelstrom','Achievement_Boss_Thorim'},
-    [92096] = {'Lightning','ability_vehicle_electrocharge'},
+    [92097] = 13,
+    [92098] = 14,
+    [92096] = 15,
     -- KNIGHT OF XOROTH
-    [92101] = {'Hellfire','Spell_Shadow_ShadowandFlame'},
-    [92104] = {'Defiance','INV_Belt_18'},
-    [92100] = {'War','INV_MISC_HOOK_01'},
+    [92101] = 16,
+    [92104] = 17,
+    [92100] = 18,
     -- GUARDIAN
-    [92105] = {'Vanguard','Ability_Warrior_SwordandBoard'},
-    [92107] = {'Inspiration','Achievement_BG_winWSG_3-0'},
-    [92106] = {'Gladiator','Achievement_BG_KillFlagCarriers_grabFlag_CapIt'},
+    [92105] = 21,
+    [92107] = 20,
+    [92106] = 19,
     -- NECROMANCER
-    [92121] = {'Death','achievement_dungeon_naxxramas_25man'},
-    [92123] = {'Animation','_D3wallofzombies'},
-    [92122] = {'Rime','Achievement_Boss_Amnennar_the_Coldbringer'},
+    [92121] = 34,
+    [92123] = 35,
+    [92122] = 36,
     -- CHRONOMANCER
-    [92120] = {'Artificer','inv_wand_1h_pvp400_c_01'},
-    [92118] = {'Duality','inv_enchant_philostone_lv2'},
-    [92119] = {'Displacement','_AuraCloak_Ice'},
+    [92120] = 33,
+    [92118] = 32,
+    [92119] = 31,
     -- STARCALLER
-    [680725] = {'Warden','_liquidstone_water'},
-    [92132] = {'Moon Guard','ability_hunter_carve'},
-    [92133] = {'Sentinel','_Diablo3_ArrowRain_Mage'},
-    [92134] = {'Moon Priest','Spell_Frost_ManaRecharge'},
+    [680725] = 45,
+    [92132] = 100,
+    [92133] = 44,
+    [92134] = 43,
 }
 
 --- DEBUG STUFF ---
@@ -163,18 +161,10 @@ function AiL.getCacheForUnit(unit)
     end
     local guid = UnitGUID(unit)
     if not CACHE[guid] then
-        -- INITIAL DATA BEFORE CACHE
-		
-        local spec, iconName = UnitSpecAndIcon(unit)
-        AiL.print("INF","No cache found for ",UnitName(unit),". Initializing to",spec)
-        if IsCustomClass(unit) then
-            spec = (spec == UnitClass(unit)) and spec or (spec .. " " .. UnitClass(unit))
-        end
-        local icon = " |T" .. (iconName or "INV_Misc_QuestionMark") .. ".blp:32:32:0:0|t "
+        local spec, icon = UnitSpecAndIcon(unit)
         CACHE[guid] = {
             spec = spec,
-            icon = icon,
-            iconName = iconName,
+            icon = " |T" .. icon .. ".blp:32:32:0:0|t ",
             ilvl = 0,
             true_ilvl = 0,
             specExpirationTime = 0,
@@ -267,12 +257,20 @@ function AiL.updateCacheSpec(unit)
             local entry = C_CharacterAdvancement.GetEntryByInternalID(v.EntryId)
             if entry then
                 local spellID = entry.Spells[rank]
-                if AiL.specListLookup[spellID] then
-                    data.spec = AiL.specListLookup[spellID][1] .. " " .. UnitClass(unit)
-                    AiL.print("INF","Inspecting CoA class spec ", UnitName(unit), "is now", data.spec)
-                    data.icon = "Interface\\Icons\\".. AiL.specListLookup[spellID][2]
-                    data.icon = " |T" .. data.icon .. ".blp:32:32:0:0|t "
+                local specID = AiL.specListLookup[spellID]
+                if specID then
+
+                    local specInfo = C_ClassInfo.GetSpecInfoByID(specID)
+                    if specInfo then
+                        if  specInfo.SpecFilename then 
+                            data.icon = " |T" .. "Interface\\Icons\\"..specInfo.SpecFilename..".blp:32:32:0:0|t "
+                        end
+                        if specInfo.Name then
+                            data.spec = specInfo.Name.." "..UnitClass(unit)
+                        end
+                    end
                     data.specExpirationTime = timeNow + TIMEOUT
+                    AiL.print("INF","Matched found. ",UnitName(unit),"is now",data.spec)
                     local onEventScript = GameTooltip:GetScript("OnEvent")
                     if onEventScript then
                         onEventScript(GameTooltip, "AIL_COA_SPEC_FOUND")
@@ -333,7 +331,7 @@ function AiL.notifyInspections(unit, type)
 
     if type == "ALL" or type == "SPEC_ONLY" then
         -- SPECIALIZATION INSPECTION FOR COA
-        if not IsSpecThrottled(unit) and IsCustomClass(unit) then
+        if not IsSpecThrottled(unit) and IsCustomClass(unit) and UnitLevel(unit) >= 10 then
             AiL.print("INF","Requesting spec inspection for ",UnitName(unit))
             C_CharacterAdvancement.InspectUnit(unit)
 

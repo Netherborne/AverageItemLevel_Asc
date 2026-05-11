@@ -9,15 +9,22 @@ local UnitIsPlayer = UnitIsPlayer
 local UnitExists = UnitExists
 
 local function OnTooltipSetUnitHandler(self)
+    if AiL.inspectionTimer then
+        AiL.inspectionTimer:Cancel()
+        -- AiL.print("INF","Cancelled inspection timer")
+        AiL.inspectionTimer = nil
+    end
+
     local _, unit = self:GetUnit()
     if not unit or not UnitIsPlayer(unit) then
         return
     end
-    local check,unitCache = pcall(AiL.getCacheForUnit, unit)
-    if not check or not unitCache or not unitCache.spec then
-        AiL.print("ERR","Error retrieving cache for unit: " .. (unit or "nil"))
-        return
-    end
+    -- local check,unitCache = pcall(AiL.getCacheForUnit, unit)
+    -- if not check or not unitCache or not unitCache.spec then
+    --     AiL.print("ERR","Error retrieving cache, reason: " .. tostring(check))
+    --     return
+    -- end
+    local unitCache = AiL.getCacheForUnit(unit)
     local spec = unitCache.spec
     local icon = AiL.Options.ShowIcon and unitCache.icon or ""
     local color = AiL.getColorforUnitSpec(unit, spec)
@@ -28,7 +35,19 @@ local function OnTooltipSetUnitHandler(self)
     else
         self:AddLine(AiL.hiddenText .. icon .. color:WrapText(spec))
     end
-    AiL.notifyInspections(unit,"ALL")
+    local beforeTimerGUID = UnitGUID(unit)
+    -- AiL.print("INF","Starting inspection timer")
+    AiL.inspectionTimer = Timer.NewTimer(0.3, function()
+        local timerGUID = UnitGUID(unit)
+        if timerGUID ~= beforeTimerGUID then
+            -- AiL.print("WRN","GUID changed during inspection timer. Cancelling.")
+            AiL.inspectionTimer = nil
+            return
+        end
+        -- AiL.print("INF","Timer triggered")
+        AiL.notifyInspections(unit, "ALL")
+        AiL.inspectionTimer = nil
+    end)
 end
 
 local function updateSpecTooltipText(self, unit)
@@ -104,3 +123,11 @@ if GameTooltip:HasScript("OnTooltipSetUnit") then
 else
     GameTooltip:SetScript("OnTooltipSetUnit", OnTooltipSetUnitHandler)
 end
+
+GameTooltip:HookScript("OnHide", function(self)
+    if AiL.inspectionTimer then
+        AiL.inspectionTimer:Cancel()
+        -- AiL.print("INF","Cancelled inspection timer")
+        AiL.inspectionTimer = nil
+    end
+end)
