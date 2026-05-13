@@ -91,6 +91,8 @@ lib.specListLookup = { -- LVL 10 passive internalID to specID
     [680725] = 45, [92132] = 100, [92133] = 44, [92134] = 43,
 }
 
+
+
 local function GetUnitSpecAndIcon(unit)
     if unit and UnitExists(unit) and UnitIsPlayer(unit) then
         if _G.UnitSpecAndIcon then
@@ -252,9 +254,22 @@ function lib:InspectPriority(unit, callback)
     self:Inspect(unit, callback, true)
 end
 
+
+local function CleanupCache()
+    local now = GetTime()
+    for guid, data in pairs(CACHE) do
+        if data.expires < now then
+            CACHE[guid] = nil
+        end
+    end
+end
+
 local function OnEvent(self, event, ...)
+
+    if event == "PLAYER_ENTERING_WORLD" or  event == "ZONE_CHANGED_NEW_AREA" then
+        CleanupCache()
+    end
     if not isInspecting then return end
-    
     if event == "MYSTIC_ENCHANT_INSPECT_RESULT" or 
        (event == "INSPECT_CHARACTER_ADVANCEMENT_RESULT" and select(1, ...) == "CA_INSPECT_OK") then
         
@@ -323,6 +338,8 @@ end
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("MYSTIC_ENCHANT_INSPECT_RESULT")
 frame:RegisterEvent("INSPECT_CHARACTER_ADVANCEMENT_RESULT")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD") 
+frame:RegisterEvent("ZONE_CHANGED_NEW_AREA") 
 frame:SetScript("OnEvent", OnEvent)
 
 function lib:ClearCache()
@@ -333,13 +350,4 @@ function lib:GetCachedInfo(guid)
     return CACHE[guid]
 end
 
-local function CleanupCache()
-    local now = GetTime()
-    for guid, data in pairs(CACHE) do
-        if data.expires < now then
-            CACHE[guid] = nil
-        end
-    end
-    Timer.NewTimer(300, CleanupCache)
-end
-Timer.NewTimer(300, CleanupCache)
+

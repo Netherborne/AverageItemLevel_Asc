@@ -234,7 +234,20 @@ function lib:InspectPriority(unit, callback)
     self:Inspect(unit, callback, true)
 end
 
+local function CleanupCache()
+    local now = GetTime()
+    for guid, data in pairs(CACHE) do
+        if data.expires < now then
+            CACHE[guid] = nil
+        end
+    end
+end
+
 local function OnEvent(self, event, ...)
+
+    if event == "PLAYER_ENTERING_WORLD" or  event == "ZONE_CHANGED_NEW_AREA" then
+        CleanupCache()
+    end
     if not isInspecting then return end
     
     if event == "INSPECT_TALENT_READY" then
@@ -267,6 +280,8 @@ end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("INSPECT_TALENT_READY")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD") 
+frame:RegisterEvent("ZONE_CHANGED_NEW_AREA") 
 frame:SetScript("OnEvent", OnEvent)
 
 function lib:ClearCache()
