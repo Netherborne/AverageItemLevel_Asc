@@ -18,6 +18,7 @@ local GetInventoryItemLink = GetInventoryItemLink
 local GetItemInfo = GetItemInfo
 local GetSpellInfo = GetSpellInfo
 local InCombatLockdown = InCombatLockdown
+local _UnitSpecAndIcon = UnitSpecAndIcon
 AiL.lastInspectGUID = nil
 AiL.specListLookup = { -- LVL 10 passive internalID to specID
     -- PYROMANCER
@@ -146,6 +147,12 @@ function AiL.print(tag,...)
     end
 end
 
+
+local function UnitSpecAndIcon(unit)
+    if unit and UnitExists(unit) and UnitIsPlayer(unit) then
+        return _UnitSpecAndIcon(unit)
+    end
+end
 function AiL.toggleDebug()
     AiL.Options.Debug = not AiL.Options.Debug
     _print(AiL.Options.Debug and "Debug turned on." or "Debug turned off.")
