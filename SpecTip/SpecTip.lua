@@ -7,8 +7,12 @@ local C_Realm = C_Realm
 local UnitLevel = UnitLevel
 local UnitIsPlayer = UnitIsPlayer
 local UnitExists = UnitExists
+local GameTooltipSpecTipIcon = GameTooltip:CreateTexture(nil, "OVERLAY")
+GameTooltipSpecTipIcon:SetSize(20, 20)
+
 
 local function OnTooltipSetUnitHandler(self)
+    GameTooltipSpecTipIcon:Hide()
     if AiL.inspectionTimer then
         AiL.inspectionTimer:Cancel()
         -- AiL.print("INF","Cancelled inspection timer")
@@ -26,14 +30,29 @@ local function OnTooltipSetUnitHandler(self)
     -- end
     local unitCache = AiL.getCacheForUnit(unit)
     local spec = unitCache.spec
-    local icon = AiL.Options.ShowIcon and unitCache.icon or ""
+    local iconPath = AiL.Options.ShowIcon and unitCache.icon or nil
     local color = AiL.getColorforUnitSpec(unit, spec)
     self:AddLine(" ")
+    
+    local lineText = AiL.hiddenText .. color:WrapText(spec)
+    if iconPath then
+        lineText = "       " .. lineText -- Add padding for the icon
+    end
+
     if AiL.Options.Ilvl then
-        self:AddDoubleLine(AiL.hiddenText .. icon .. color:WrapText(spec),
+        self:AddDoubleLine(lineText,
             AiL.getColoredIlvlString(UnitLevel(unit), AiL.getCacheForUnit(unit).true_ilvl))
     else
-        self:AddLine(AiL.hiddenText .. icon .. color:WrapText(spec))
+        self:AddLine(lineText)
+    end
+    if iconPath then
+        local numLines = self:NumLines()
+        local leftLine = _G["GameTooltipTextLeft" .. numLines]
+        GameTooltipSpecTipIcon:SetTexture(iconPath)
+        GameTooltipSpecTipIcon:SetPoint("LEFT", leftLine, "LEFT", 0, 0)
+        GameTooltipSpecTipIcon:Show()
+    else
+        GameTooltipSpecTipIcon:Hide()
     end
     local beforeTimerGUID = UnitGUID(unit)
     -- AiL.print("INF","Starting inspection timer")
@@ -59,9 +78,18 @@ local function updateSpecTooltipText(self, unit)
             if string.find(text, AiL.hiddenText, 1, true) then
                 local unitCache = AiL.getCacheForUnit(unit)
                 local spec = unitCache.spec
-                local icon = AiL.Options.ShowIcon and unitCache.icon or ""
+                local iconPath = AiL.Options.ShowIcon and unitCache.icon or nil
                 local color = AiL.getColorforUnitSpec(unit, spec)
-                leftLine:SetText(AiL.hiddenText .. icon .. color:WrapText(spec))
+                local lineText = AiL.hiddenText .. color:WrapText(spec)
+                if iconPath then
+                    lineText = "       " .. lineText
+                    GameTooltipSpecTipIcon:SetTexture(iconPath)
+                    GameTooltipSpecTipIcon:SetPoint("LEFT", leftLine, "LEFT", 0, 0)
+                    GameTooltipSpecTipIcon:Show()
+                else
+                    GameTooltipSpecTipIcon:Hide()
+                end
+                leftLine:SetText(lineText)
             end
         end
     end
@@ -130,4 +158,5 @@ GameTooltip:HookScript("OnHide", function(self)
         -- AiL.print("INF","Cancelled inspection timer")
         AiL.inspectionTimer = nil
     end
+    GameTooltipSpecTipIcon:Hide()
 end)

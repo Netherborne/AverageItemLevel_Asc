@@ -171,7 +171,7 @@ function AiL.getCacheForUnit(unit)
         local spec, icon = UnitSpecAndIcon(unit)
         CACHE[guid] = {
             spec = spec,
-            icon = " |T" .. icon .. ".blp:32:32:0:0|t ",
+            icon = icon,
             ilvl = 0,
             true_ilvl = 0,
             specExpirationTime = 0,
@@ -232,7 +232,7 @@ function AiL.updateCacheSpec(unit)
         AiL.print("ERR","UnitSpecAndIcon did not return valid info for", UnitName(unit),".")
         newSpec = class or "?"
     end
-    newIcon = " |T" .. (newIcon or "INV_Misc_QuestionMark") .. ".blp:32:32:0:0|t "
+    newIcon = newIcon or "INV_Misc_QuestionMark"
     local data = AiL.getCacheForUnit(unit)
     -- Is CoA --
     if IsCustomClass(unit) then
@@ -270,7 +270,7 @@ function AiL.updateCacheSpec(unit)
                     local specInfo = C_ClassInfo.GetSpecInfoByID(specID)
                     if specInfo then
                         if  specInfo.SpecFilename then 
-                            data.icon = " |T" .. "Interface\\Icons\\"..specInfo.SpecFilename..".blp:32:32:0:0|t "
+                            data.icon = "Interface\\Icons\\"..specInfo.SpecFilename
                         end
                         if specInfo.Name then
                             data.spec = specInfo.Name.." "..UnitClass(unit)
@@ -296,7 +296,7 @@ function AiL.updateCacheSpec(unit)
             local name, _, icon = GetSpellInfo(legendaryEnchantID)
             if icon then
                 newSpec = name
-                newIcon = " |T" .. icon .. ".blp:32:32:0:0|t "
+                newIcon = icon
             end
         end  
         -- if seasonal (Elune), spec == class so timeout instantly. if not, timeout when spec ~= class			
