@@ -150,7 +150,7 @@ function ProcessNext()
     currentUnit = next.unit
     currentGUID = next.guid
     currentCallbacks = next.callbacks
-    print("LibSpecInspect Remaining Inspections:",#queue)
+    -- print("LibSpecInspect Remaining Inspections:",#queue)
     -- Safeguard: Ensure unit still exists and is a player before proceeding
     if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
         ProcessNext()
@@ -242,7 +242,7 @@ function lib:Inspect(unit, callback, priority)
         else
             table.insert(queue, entry)
         end
-        -- print("LibSpecInspect Enqueued Inspections:",#queue)
+        -- print("LibSpecInspect Enqueued new inspection. Queue size is now #",#queue)
     end
     
     if not isInspecting then
