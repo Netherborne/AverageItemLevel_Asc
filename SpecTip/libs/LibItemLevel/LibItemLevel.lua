@@ -276,3 +276,14 @@ end
 function lib:GetCachedInfo(guid)
     return CACHE[guid]
 end
+
+local function CleanupCache()
+    local now = GetTime()
+    for guid, data in pairs(CACHE) do
+        if data.expires < now then
+            CACHE[guid] = nil
+        end
+    end
+    Timer.NewTimer(300, CleanupCache)
+end
+Timer.NewTimer(300, CleanupCache)

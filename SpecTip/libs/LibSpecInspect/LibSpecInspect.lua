@@ -143,11 +143,12 @@ function ProcessNext()
         return
     end
 
+    
     local next = table.remove(queue, 1)
     currentUnit = next.unit
     currentGUID = next.guid
     currentCallbacks = next.callbacks
-    
+    print("LibSpecInspect Remaining Inspections:",#queue)
     -- Safeguard: Ensure unit still exists and is a player before proceeding
     if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
         ProcessNext()
@@ -239,6 +240,7 @@ function lib:Inspect(unit, callback, priority)
         else
             table.insert(queue, entry)
         end
+        -- print("LibSpecInspect Enqueued Inspections:",#queue)
     end
     
     if not isInspecting then
@@ -330,3 +332,14 @@ end
 function lib:GetCachedInfo(guid)
     return CACHE[guid]
 end
+
+local function CleanupCache()
+    local now = GetTime()
+    for guid, data in pairs(CACHE) do
+        if data.expires < now then
+            CACHE[guid] = nil
+        end
+    end
+    Timer.NewTimer(300, CleanupCache)
+end
+Timer.NewTimer(300, CleanupCache)
