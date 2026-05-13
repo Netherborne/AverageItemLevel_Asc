@@ -19,7 +19,7 @@ local GetItemInfo = GetItemInfo
 local GetSpellInfo = GetSpellInfo
 local InCombatLockdown = InCombatLockdown
 local _UnitSpecAndIcon = UnitSpecAndIcon
-AiL.lastInspectGUID = nil
+AiL.lastInspect = {}
 AiL.specListLookup = { -- LVL 10 passive internalID to specID
     -- PYROMANCER
     [92126] = 37,
@@ -280,7 +280,7 @@ function AiL.updateCacheSpec(unit)
                     AiL.print("INF","Matched found. ",UnitName(unit),"is now",data.spec)
                     local onEventScript = GameTooltip:GetScript("OnEvent")
                     if onEventScript then
-                        onEventScript(GameTooltip, "AIL_COA_SPEC_FOUND")
+                        onEventScript(GameTooltip, "AIL_SPEC_FOUND")
                     end
                     return
                 end
@@ -305,6 +305,10 @@ function AiL.updateCacheSpec(unit)
         if C_Realm.IsSeasonal() or data.spec ~= class then
             data.specExpirationTime = timeNow + TIMEOUT
         end
+        local onEventScript = GameTooltip:GetScript("OnEvent")
+        if onEventScript then
+            onEventScript(GameTooltip, "AIL_SPEC_FOUND")
+        end
 	end
 end
 
@@ -322,7 +326,8 @@ function AiL.notifyInspections(unit, type)
         return
     end
   
-    AiL.lastInspectGUID = UnitGUID(unit)
+    AiL.lastInspect.guid = UnitGUID(unit)
+    AiL.lastInspect.name = UnitName(unit)
     if type == "ALL" or type == "ILVL_ONLY" then
         
         -- ITEM LEVEL INSPECTION
@@ -337,16 +342,21 @@ function AiL.notifyInspections(unit, type)
     end
 
     if type == "ALL" or type == "SPEC_ONLY" then
+
+        if IsSpecThrottled(unit) then 
+            return 
+        end
+
         -- SPECIALIZATION INSPECTION FOR COA
-        if not IsSpecThrottled(unit) and IsCustomClass(unit) and UnitLevel(unit) >= 10 then
+        if  IsCustomClass(unit) and UnitLevel(unit) >= 10 then
             AiL.print("INF","Requesting spec inspection for ",UnitName(unit))
             C_CharacterAdvancement.InspectUnit(unit)
 
         -- SPECIALIZATION INSPECTION FOR HERO and OG9 CLASSES
-        elseif IsHeroClass(unit) or C_Realm.IsLive() then
-            if C_MysticEnchant.CanInspect(unit) and not IsSpecThrottled(unit) then
-                AiL.print("INF","Requesting Mystic Enchant inspect for ",UnitName(unit))
-                C_MysticEnchant.Inspect(unit, true)
+        elseif IsHeroClass(unit) or IsDefaultClass(unit) then
+            if C_MysticEnchant.CanInspect(unit) then
+                    AiL.print("INF","Requesting Mystic Enchant inspect for ",UnitName(unit))
+                    C_MysticEnchant.Inspect(unit, true)
             else
                 AiL.print("WRN","Cannot inspect", UnitName(unit), "for spec at this time.")
             end

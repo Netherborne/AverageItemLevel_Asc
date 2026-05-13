@@ -11,13 +11,19 @@ local GameTooltipSpecTipIcon = GameTooltip:CreateTexture(nil, "OVERLAY")
 GameTooltipSpecTipIcon:SetSize(20, 20)
 
 
-local function OnTooltipSetUnitHandler(self)
-    GameTooltipSpecTipIcon:Hide()
+local function doCleanup()
     if AiL.inspectionTimer then
         AiL.inspectionTimer:Cancel()
         -- AiL.print("INF","Cancelled inspection timer")
         AiL.inspectionTimer = nil
     end
+    if GameTooltipSpecTipIcon:IsShown() then
+        GameTooltipSpecTipIcon:Hide()
+    end
+end
+
+local function OnTooltipSetUnitHandler(self)
+    doCleanup()
 
     local _, unit = self:GetUnit()
     if not unit or not UnitIsPlayer(unit) then
@@ -25,7 +31,7 @@ local function OnTooltipSetUnitHandler(self)
     end
     -- local check,unitCache = pcall(AiL.getCacheForUnit, unit)
     -- if not check or not unitCache or not unitCache.spec then
-    --     AiL.print("ERR","Error retrieving cache, reason: " .. tostring(check))
+    --     AiL.print("ERR","Error retrieving cache.)
     --     return
     -- end
     local unitCache = AiL.getCacheForUnit(unit)
@@ -114,15 +120,17 @@ end
 local function GameTooltipOnEvent(self, event, ...)
     local _, unit = self:GetUnit()
     if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
+        doCleanup()
         return
     end
-    if not AiL.lastInspectGUID or AiL.lastInspectGUID ~= UnitGUID(unit) then
-        AiL.print("WRN","Received event", event, "while mouseover GUID is ",UnitGUID(unit), "but inspection results were for", AiL.lastInspectGUID,". Ignoring event.");
+    if not AiL.lastInspect.guid or AiL.lastInspect.guid ~= UnitGUID(unit) then
+        AiL.print("WRN","Received data for",AiL.lastInspect.name, "but current unit is",UnitName(unit),". Ignoring.");
         return
     end
 
-    if event == "AIL_COA_SPEC_FOUND" then
+    if event == "AIL_SPEC_FOUND" then
         updateSpecTooltipText(self, unit)
+        GameTooltip:Show()
     elseif event == "INSPECT_TALENT_READY" then
         if AiL.Options.Ilvl then
             AiL.updateCacheIlvl(unit)
@@ -131,13 +139,12 @@ local function GameTooltipOnEvent(self, event, ...)
     elseif event == "AIL_FINAL_INSPECT_REACHED" then
         if AiL.Options.Ilvl then
             updateIlvlTooltipText(self, unit)
+            GameTooltip:Show()
         end
     elseif (event == "MYSTIC_ENCHANT_INSPECT_RESULT" and (IsHeroClass(unit) or C_Realm.IsLive())) or
         (event == "INSPECT_CHARACTER_ADVANCEMENT_RESULT" and select(1, ...) == "CA_INSPECT_OK") then
         AiL.updateCacheSpec(unit)
-        updateSpecTooltipText(self, unit)
     end
-    GameTooltip:Show()
 end
 
 GameTooltip:RegisterEvent("INSPECT_TALENT_READY")
@@ -152,11 +159,5 @@ else
     GameTooltip:SetScript("OnTooltipSetUnit", OnTooltipSetUnitHandler)
 end
 
-GameTooltip:HookScript("OnHide", function(self)
-    if AiL.inspectionTimer then
-        AiL.inspectionTimer:Cancel()
-        -- AiL.print("INF","Cancelled inspection timer")
-        AiL.inspectionTimer = nil
-    end
-    GameTooltipSpecTipIcon:Hide()
-end)
+GameTooltip:HookScript("OnHide", doCleanup)
+GameTooltip:HookScript("OnTooltipCleared", doCleanup)
