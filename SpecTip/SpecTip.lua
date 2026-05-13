@@ -23,8 +23,6 @@ local function doCleanup()
 end
 
 local function OnTooltipSetUnitHandler(self)
-    doCleanup()
-
     local _, unit = self:GetUnit()
     if not unit or not UnitIsPlayer(unit) then
         return
@@ -120,7 +118,6 @@ end
 local function GameTooltipOnEvent(self, event, ...)
     local _, unit = self:GetUnit()
     if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
-        doCleanup()
         return
     end
     if not AiL.lastInspect.guid or AiL.lastInspect.guid ~= UnitGUID(unit) then
