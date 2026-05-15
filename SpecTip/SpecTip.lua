@@ -64,18 +64,18 @@ end
 
 
 local function doInspections(unit)
-    LibSpecInspect:InspectPriority(unit, function(guid, spec, icon)
+    LibSpecInspect:InspectPriority(unit, function(guid, spec, icon, role, isTimeout)
         local onEventScript = GameTooltip:GetScript("OnEvent")
         if onEventScript then
-            onEventScript(GameTooltip, "SPECTIP_UPDATE_SPEC",unit,spec,icon)
+            onEventScript(GameTooltip, "SPECTIP_UPDATE_SPEC", unit, spec, icon, role, isTimeout)
         end
     end)
 
     if AiL.Options.Ilvl then
-        LibItemLevel:InspectPriority(unit, function(guid, ilvl)
+        LibItemLevel:InspectPriority(unit, function(guid, ilvl, isTimeout)
             local onEventScript = GameTooltip:GetScript("OnEvent")
             if onEventScript then
-                onEventScript(GameTooltip, "SPECTIP_UPDATE_ILVL",unit,guid,ilvl)
+                onEventScript(GameTooltip, "SPECTIP_UPDATE_ILVL", unit, guid, ilvl, isTimeout)
             end
         end)
     end
@@ -99,9 +99,9 @@ local function OnTooltipSetUnitHandler(self)
     else
         self:AddLine(lineText)
     end
+    updateSpecTooltipText(self,unit,spec,icon)
     AiL.lastInspect.guid = UnitGUID(unit)
     doInspections(unit)
-    
 end
 
 
@@ -116,14 +116,14 @@ local function GameTooltipOnEvent(self, event, ...)
         return
     end
     if event == "SPECTIP_UPDATE_SPEC" then
-        local unit,spec,icon = ...
-        updateSpecTooltipText(self,unit,spec,icon)
+        local unit, spec, icon, role, isTimeout = ...
+        updateSpecTooltipText(self, unit, spec, icon)
         GameTooltip:Show()
         return
     end
     if event == "SPECTIP_UPDATE_ILVL" then
-        local unit,guid,ilvl = ...
-        updateIlvlTooltipText(self,unit,guid,ilvl)
+        local unit, guid, ilvl, isTimeout = ...
+        updateIlvlTooltipText(self, unit, guid, ilvl)
         GameTooltip:Show()
     end
 end

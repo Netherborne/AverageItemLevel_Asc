@@ -101,10 +101,10 @@ local function GetUnitSpecAndIcon(unit)
     end
 end
 
-local function FireCallbacks(guid, spec, icon)
+local function FireCallbacks(guid, spec, icon, role, isTimeout)
     if currentGUID == guid then
         for _, callback in ipairs(currentCallbacks) do
-            pcall(callback, guid, spec, icon)
+            pcall(callback, guid, spec, icon, role, isTimeout)
         end
         currentCallbacks = {}
     end
@@ -131,7 +131,7 @@ local function OnTimeout()
         local class = UnitClass(currentUnit)
         spec = class
     end
-    FireCallbacks(currentGUID, spec, icon)
+    FireCallbacks(currentGUID, spec, icon, nil, true)
     ProcessNext()
 end
 
@@ -150,8 +150,8 @@ function ProcessNext()
     currentUnit = next.unit
     currentGUID = next.guid
     currentCallbacks = next.callbacks
-    -- print("LibSpecInspect Remaining Inspections:",#queue)
-    -- Safeguard: Ensure unit still exists and is a player before proceeding
+    print("LibSpecInspect Remaining Inspections:",#queue)
+    -- Ensure unit still exists and is a player before proceeding
     if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
         ProcessNext()
         return
@@ -161,16 +161,16 @@ function ProcessNext()
     local cached = CACHE[currentGUID]
     if cached and cached.expires > GetTime() then
         -- print("LibSpecInspect: Queued cache hit for:", UnitName(currentUnit))
-        FireCallbacks(currentGUID, cached.spec, cached.icon)
+        FireCallbacks(currentGUID, cached.spec, cached.icon, cached.role, false)
         ProcessNext()
         return
     end
 
     isInspecting = true
     
-    -- Safely wait 200ms before triggering the inspection
+    -- Wait 200ms before triggering the inspection
     Timer.NewTimer(0.2, function()
-        -- Safeguard: Ensure unit is still valid after the delay
+        -- Ensure unit is still valid after the delay
         if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
             ProcessNext()
             return
@@ -211,7 +211,7 @@ function lib:Inspect(unit, callback, priority)
     if cached and cached.expires > GetTime() then
         -- print("LibSpecInspect: Immediate cache hit for:", UnitName(unit))
         if callback then
-            callback(guid, cached.spec, cached.icon)
+            callback(guid, cached.spec, cached.icon, cached.role, false)
         end
         return
     end
@@ -242,7 +242,7 @@ function lib:Inspect(unit, callback, priority)
         else
             table.insert(queue, entry)
         end
-        -- print("LibSpecInspect Enqueued new inspection. Queue size is now #",#queue)
+        print("LibSpecInspect Enqueued new inspection. Queue size is now #",#queue)
     end
     
     if not isInspecting then
@@ -281,7 +281,7 @@ local function OnEvent(self, event, ...)
 
         local class, classFile = UnitClass(unit)
         local newSpec, newIcon = GetUnitSpecAndIcon(unit)
-        
+        local role = nil
         local finalSpec, finalIcon
         
         if IsCustomClass(unit) then
@@ -304,6 +304,13 @@ local function OnEvent(self, event, ...)
                                     if specInfo then
                                         finalIcon = "Interface\\Icons\\"..(specInfo.SpecFilename or "INV_Misc_QuestionMark")
                                         finalSpec = (specInfo.Name or "Unknown").." "..class
+                                        role = { 
+                                            Tank = specInfo.Tank ,
+                                            Healer= specInfo.Healer,
+                                            RangedDPS = specInfo.RangedDPS,
+                                            CasterDPS = specInfo.CasterDPS,
+                                            MeleeDPS = specInfo.MeleeDPS,
+                                        }
                                         break
                                     end
                                 end
@@ -327,8 +334,8 @@ local function OnEvent(self, event, ...)
 
         if finalSpec then
             -- print("LibSpecInspect: Caching results for:", UnitName(unit), "Spec:", finalSpec)
-            CACHE[currentGUID] = { spec = finalSpec, icon = finalIcon, expires = GetTime() + TIMEOUT }
-            FireCallbacks(currentGUID, finalSpec, finalIcon)
+            CACHE[currentGUID] = { spec = finalSpec, role = role, icon = finalIcon, expires = GetTime() + TIMEOUT }
+            FireCallbacks(currentGUID, finalSpec, finalIcon, role, false)
         end
         
         ProcessNext()

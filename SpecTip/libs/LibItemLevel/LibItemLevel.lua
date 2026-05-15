@@ -78,10 +78,10 @@ local function CalculateManualIlvl(unit)
     return 0
 end
 
-local function FireCallbacks(guid, ilvl)
+local function FireCallbacks(guid, ilvl, isTimeout)
     if currentGUID == guid then
         for _, callback in ipairs(currentCallbacks) do
-            pcall(callback, guid, ilvl)
+            pcall(callback, guid, ilvl, isTimeout)
         end
         currentCallbacks = {}
     end
@@ -96,12 +96,12 @@ local function StopTimeout()
     end
 end
 
-local function OnResult(ilvl)
+local function OnResult(ilvl, isTimeout)
     StopTimeout()
     if currentGUID then
         -- print("LibItemLevel: Caching results for:", UnitName(currentUnit), "iLvl:", format("%.2f", ilvl))
         CACHE[currentGUID] = { ilvl = ilvl, expires = GetTime() + TIMEOUT }
-        FireCallbacks(currentGUID, ilvl)
+        FireCallbacks(currentGUID, ilvl, isTimeout)
     end
     ProcessNext()
 end
@@ -118,7 +118,7 @@ local function OnTimeout()
     if ilvl == 0 then
         ilvl = CalculateManualIlvl(currentUnit)
     end
-    OnResult(ilvl)
+    OnResult(ilvl, true)
 end
 
 function ProcessNext()
@@ -138,7 +138,7 @@ function ProcessNext()
     currentCallbacks = next.callbacks
     currentRetries = 0
     
-    -- Safeguard: Ensure unit still exists and is a player before proceeding
+    -- Ensure unit still exists and is a player before proceeding
     if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
         ProcessNext()
         return
@@ -155,9 +155,9 @@ function ProcessNext()
 
     isInspecting = true
     
-    -- Safely wait 200ms before triggering the inspection
+    -- Wait 200ms before triggering the inspection
     Timer.NewTimer(0.2, function()
-        -- Safeguard: Ensure unit is still valid after the delay
+        -- Ensure unit is still valid after the delay
         if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
             ProcessNext()
             return
