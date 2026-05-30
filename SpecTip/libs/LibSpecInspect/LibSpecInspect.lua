@@ -32,7 +32,7 @@ local currentGUID = nil
 local currentCallbacks = {}
 local timeoutTimer = nil
 
-local TIMEOUT = 60*15 -- cache timeout
+local TIMEOUT = 60*60 -- cache timeout
 local INSPECT_TIMEOUT = 2 -- seconds to wait for a result before giving up
 
 local GetTime = GetTime
@@ -150,6 +150,7 @@ function ProcessNext()
     currentUnit = next.unit
     currentGUID = next.guid
     currentCallbacks = next.callbacks
+    local force = next.force
     -- print("LibSpecInspect Remaining Inspections:",#queue)
     -- Ensure unit still exists and is a player before proceeding
     if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
@@ -158,12 +159,14 @@ function ProcessNext()
     end
     
     -- Check cache first
-    local cached = CACHE[currentGUID]
-    if cached and cached.expires > GetTime() then
-        -- print("LibSpecInspect: Queued cache hit for:", UnitName(currentUnit))
-        FireCallbacks(currentGUID, cached.spec, cached.icon, cached.role, false)
-        ProcessNext()
-        return
+    if not force then
+        local cached = CACHE[currentGUID]
+        if cached and cached.expires > GetTime() then
+            -- print("LibSpecInspect: Queued cache hit for:", UnitName(currentUnit))
+            FireCallbacks(currentGUID, cached.spec, cached.icon, cached.role, false)
+            ProcessNext()
+            return
+        end
     end
 
     isInspecting = true
@@ -173,6 +176,11 @@ function ProcessNext()
         -- Ensure unit is still valid after the delay
         if not currentUnit or not UnitExists(currentUnit) or not UnitIsPlayer(currentUnit) or UnitGUID(currentUnit) ~= currentGUID then
             ProcessNext()
+            return
+        end
+        
+        if AscensionInspectFrame and AscensionInspectFrame:IsShown() then
+            OnTimeout()
             return
         end
         
@@ -193,7 +201,7 @@ function ProcessNext()
     end)
 end
 
-function lib:Inspect(unit, callback, priority)
+function lib:Inspect(unit, callback, priority, force)
     if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then return end
     
     local guid = UnitGUID(unit)
@@ -207,13 +215,15 @@ function lib:Inspect(unit, callback, priority)
     end
     
     -- Check cache
-    local cached = CACHE[guid]
-    if cached and cached.expires > GetTime() then
-        -- print("LibSpecInspect: Immediate cache hit for:", UnitName(unit))
-        if callback then
-            callback(guid, cached.spec, cached.icon, cached.role, false)
+    if not force then
+        local cached = CACHE[guid]
+        if cached and cached.expires > GetTime() then
+            -- print("LibSpecInspect: Immediate cache hit for:", UnitName(unit))
+            if callback then
+                callback(guid, cached.spec, cached.icon, cached.role, false)
+            end
+            return
         end
-        return
     end
 
     -- Check if already in queue
@@ -230,13 +240,16 @@ function lib:Inspect(unit, callback, priority)
         if callback then
             table.insert(entry.callbacks, callback)
         end
+        if force then
+            entry.force = true
+        end
         if priority then
             -- Move to front
             table.remove(queue, foundIndex)
             table.insert(queue, 1, entry)
         end
     else
-        local entry = { unit = unit, guid = guid, callbacks = { callback } }
+        local entry = { unit = unit, guid = guid, callbacks = { callback }, force = force }
         if priority then
             table.insert(queue, 1, entry)
         else
@@ -252,6 +265,14 @@ end
 
 function lib:InspectPriority(unit, callback)
     self:Inspect(unit, callback, true)
+end
+
+function lib:ForceInspect(unit, callback)
+    self:Inspect(unit, callback, false, true)
+end
+
+function lib:ForceInspectPriority(unit, callback)
+    self:Inspect(unit, callback, true, true)
 end
 
 
