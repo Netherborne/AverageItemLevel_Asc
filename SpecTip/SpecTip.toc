@@ -2,8 +2,10 @@
 ## Title: SpecTip
 ## Notes: Displays information on player tooltips.
 ## Author: Netherborne
-## Version: 1.3.5
+## Version: 1.3.5 With Libs
 ## SavedVariables: SpecTipOptions
+libs\LibSpecInspect\LibSpecInspect.lua
+libs\LibItemLevel\LibItemLevel.lua
 config.lua
 core.lua
 SpecTip.lua

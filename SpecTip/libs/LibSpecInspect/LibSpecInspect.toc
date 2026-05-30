@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: LibSpecInspect
+## Notes: A library to enqueue and handle specialization inspections.
+## Author: Netherborne
+## Version: 1.0
+
+LibSpecInspect.lua

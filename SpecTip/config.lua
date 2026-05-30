@@ -7,8 +7,6 @@ AiL = select(2, ...)
 
 if not AiL then return end
 AiL.Config = AiL.Config or {}
-AiL.Config.TIMEOUT = 180
-AiL.Config.MAX_INSPECTIONS_TO_TIMEOUT = 5
 
 
 local addonName = "SpecTip"
@@ -146,27 +144,16 @@ local function createSettingsPanel()
     -- Slash command to open the options
     SLASH_SpecTip1 = "/stip"
     SlashCmdList["SpecTip"] = function(msg)
-        if msg == "cleanup" then
-            AiL.cleanupStaleCache()
-            AiL.print("INF","SpecTip: Cache cleanup completed.")
-        else
-            InterfaceOptionsFrame_OpenToCategory(addonName)
-        end
+        InterfaceOptionsFrame_OpenToCategory(addonName)
     end 
 
 end
 
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
-initFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 initFrame:SetScript("OnEvent", function(self, event, name)
-    if event == "ADDON_LOADED" and name ~= addonName then
-        return
-    elseif event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
-        AiL.cleanupStaleCache()
-    elseif event == "ADDON_LOADED" then
+    if event == "ADDON_LOADED" and name == addonName then
         SpecTipOptions = SpecTipOptions or {}
         for key, value in pairs(defaults) do
             if SpecTipOptions[key] == nil then

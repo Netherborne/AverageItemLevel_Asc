@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: LibItemLevel
+## Notes: A library to enqueue and handle item level inspections.
+## Author: Netherborne
+## Version: 1.0
+
+LibItemLevel.lua
